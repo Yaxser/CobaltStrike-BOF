@@ -47,15 +47,31 @@ hr = CLSIDFromString(MMC20_CLSID, &clsid);
 ### 3.  Finding the IID's
 Finding IID’s is not so different from finding CLSID’s, lucky us. However, sometimes the tricky part is to find the right interface. What we want to do is porting the following line to C.
 ```powershell
-$hb.Document.ActiveView.ExecuteShellCommand('cmd',$null,'/c echo Haboob > C:\hb.txt','7')
+$obj.Document.ActiveView.ExecuteShellCommand('cmd',$null,'/c calc.exe','7')
 ```
 A good place to start is `OleView .NET.` Let’s see which interfaces are exposed in the MMC20.Application class. The supported interfaces tab will show you which interfaces are exposed by MMC20.Application class. 
 
 ![Finding-IIDs](https://github.com/Yaxser/CobaltStrike-BOF/blob/gh-pages/images/supported_ifc.png)
 
-As you can see, the `Document` and `ActiveView` are not present so we cannot access their methods directly. So what and where are they? It turned out that the Document and ActiveView interfaces are stored as properties. Actually, ActiveView is not the name of the interface. The name of the interface is `View`, as you can see below. We already established that these interfaces are not accessible directly, so we need to retrieve them as properties. The `Document` property is stored inside the `Application` interface, and the `ActiveView` (i.e. `View` interface) property is stored inside `Document` the document interface. So, the interface we would like to retrieve first is the `Application` interface.
+As you can see, the `Document` and `ActiveView` are not present so we cannot access their methods directly. So what and where are they? It turned out that the Document and ActiveView interfaces are stored as properties. Actually, ActiveView is not the name of the interface. The name of the interface is `View`, as you can see below. We already established that these interfaces are not accessible directly, so we need to retrieve them as properties. The `Document` property is stored inside the `Application` interface, and the `ActiveView` (i.e. `View` interface) property is stored inside `Document` the document interface. So, the interface we would like to retrieve first is the `Application` interface. From there, we will get access to the Document and View interfaces without needing their IID. 
 
 ![IIDsAsProperties](https://github.com/Yaxser/CobaltStrike-BOF/blob/gh-pages/images/Application_ifc.png)
+
+
+The IID for the application interface is also shown on the previous picture, so let's copy it to our code.
+
+```C
+IID ApplicationIfc;
+hr = IIDFromString(L"{A3AFB9CC-B653-4741-86AB-F0470EC1384C}", &ApplicationIfc);
+```
+
+### 3.  Create The Instance
+Now that we have the CLSID and IID we need, we can create an instance of the MMC20.Application class using the following arguments:
+1.	The CLSID for the MMC20.Application
+2.	This is almost always NULL
+3.	The class context. OleView .NET shows the class context under the properties tab (picture below).
+4.	The IID of the interface we are interested in. If we have multiple interfaces that we want to interact with, we use **one** CoCreateInstance and multiple QueryInterface calls.
+5.	A pointer to a variable where we want our object to be stored. We can pass a variable of type IDispatch since the application interface inherits from IDispatch.
 
 
 
