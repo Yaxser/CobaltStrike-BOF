@@ -49,7 +49,13 @@ Finding IID’s is not so different from finding CLSID’s, lucky us. However, s
 ```powershell
 $hb.Document.ActiveView.ExecuteShellCommand('cmd',$null,'/c echo Haboob > C:\hb.txt','7')
 ```
-A good place to start is `OleView .NET.` Let’s see which interfaces are exposed  in the MMC20.Application class. The supported interfaces tab will show you which interfaces are exposed by MMC20.Application class. 
+A good place to start is `OleView .NET.` Let’s see which interfaces are exposed in the MMC20.Application class. The supported interfaces tab will show you which interfaces are exposed by MMC20.Application class. 
+
+![Finding-IIDs](https://github.com/Yaxser/CobaltStrike-BOF/blob/gh-pages/images/supported_ifc.png)
+
+As you can see, the `Document` and `ActiveView` are not present so we cannot access their methods directly. So what and where are they? It turned out that the Document and ActiveView interfaces are stored as properties. Actually, ActiveView is not the name of the interface. The name of the interface is `View`, as you can see below. We already established that these interfaces are not accessible directly, so we need to retrieve them as properties. The `Document` property is stored inside the `Application` interface, and the `ActiveView` (i.e. `View` interface) property is stored inside `Document` the document interface. So, the interface we would like to retrieve first is the `Application` interface.
+
+![IIDsAsProperties](https://github.com/Yaxser/CobaltStrike-BOF/blob/gh-pages/images/Application_ifc.png)
 
 
 
