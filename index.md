@@ -16,7 +16,7 @@ The COM Basics together with a demo is covered in a YouTube video (TBD).
 Let's break them down one at a time...
 
 ### 1.  Initialize COM
-This is pretty much standard. The function to use is CoInitialize, and NULL must be passed as an argument for it. You may also use CoInitializeEx, but CoInitialize will do.
+This is pretty much standard. The function to use is `CoInitialize`, and NULL must be passed as an argument for it. You may also use `CoInitializeEx`, but `CoInitialize` will do.
 ```C
 HRESULT CoInitialize(NULL);
 ```
@@ -27,10 +27,51 @@ There are many ways to find the CLSID for a given class. The easiest way is to u
 CLSID clsid;
 HRESULT CLSIDFromProgID( L”MMC20.Application”, &clsid);
 ```
-Another way to find the CLSID is using OleView .NET from James Forshaw. It is an excellent tool to inspect COM objects. You can explore ProIDs and filter for MMC20 and copy the GUID. This tool has by no doubt much more to offer than just copying GUIDs.
+Another way to find the CLSID is using OleView .NET from James Forshaw. It is an excellent tool to inspect COM objects. You can explore ProgIDs and filter for MMC20 and copy the GUID. This tool has by no doubt much more to offer than just copying GUIDs.
 
-![Finding-CLSID](https://)
+![Finding-CLSID](https://github.com/Yaxser/CobaltStrike-BOF/blob/gh-pages/images/MMC20CLSID.png)
 
+Now, if you obtain the GUID as a string, you have to convert it to a CLSID using CLSIDFromString. Note the curly brackets, they are necessary.
+
+```C
+wchar_t *MMC20_CLSID = L”{49B2791A-B1AE-4C90-9B8E-E860BA07F889}”
+CLSID clsid;
+hr = CLSIDFromString(MMC20_CLSID, &clsid);
+```
+
+
+```C
+
+```
+
+### 3.  Finding the IID's
+Finding IID’s is not so different from finding CLSID’s, lucky us. However, sometimes the tricky part is to find the right interface. What we want to do is porting the following line to C.
+```powershell
+$obj.Document.ActiveView.ExecuteShellCommand('cmd',$null,'/c calc.exe','7')
+```
+A good place to start is `OleView .NET.` Let’s see which interfaces are exposed in the MMC20.Application class. The supported interfaces tab will show you which interfaces are exposed by MMC20.Application class. 
+
+![Finding-IIDs](https://github.com/Yaxser/CobaltStrike-BOF/blob/gh-pages/images/supported_ifc.png)
+
+As you can see, the `Document` and `ActiveView` are not present so we cannot access their methods directly. So what and where are they? It turned out that the Document and ActiveView interfaces are stored as properties. Actually, ActiveView is not the name of the interface. The name of the interface is `View`, as you can see below. We already established that these interfaces are not accessible directly, so we need to retrieve them as properties. The `Document` property is stored inside the `Application` interface, and the `ActiveView` (i.e. `View` interface) property is stored inside `Document` the document interface. So, the interface we would like to retrieve first is the `Application` interface. From there, we will get access to the Document and View interfaces without needing their IID. 
+
+![IIDsAsProperties](https://github.com/Yaxser/CobaltStrike-BOF/blob/gh-pages/images/Application_ifc.png)
+
+
+The IID for the application interface is also shown on the previous picture, so let's copy it to our code.
+
+```C
+IID ApplicationIfc;
+hr = IIDFromString(L"{A3AFB9CC-B653-4741-86AB-F0470EC1384C}", &ApplicationIfc);
+```
+
+### 3.  Create The Instance
+Now that we have the CLSID and IID we need, we can create an instance of the MMC20.Application class using the following arguments:
+1.	The CLSID for the MMC20.Application
+2.	This is almost always NULL
+3.	The class context. OleView .NET shows the class context under the properties tab (picture below).
+4.	The IID of the interface we are interested in. If we have multiple interfaces that we want to interact with, we use **one** CoCreateInstance and multiple QueryInterface calls.
+5.	A pointer to a variable where we want our object to be stored. We can pass a variable of type IDispatch since the application interface inherits from IDispatch.
 
 
 
