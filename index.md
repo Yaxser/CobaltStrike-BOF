@@ -15,7 +15,7 @@ The COM Basics together with a demo is covered in a YouTube video (TBD).
 
 Let's break them down one at a time...
 
-1. Initialize COM
+### 1. Initialize COM
 This is pretty much standard. The function to use is CoInitialize, and NULL must be passed as an argument for it. You may also use CoInitializeEx, but CoInitialize will do.
 ```C
 HRESULT CoInitialize(NULL);
