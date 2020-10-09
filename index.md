@@ -40,9 +40,7 @@ hr = CLSIDFromString(MMC20_CLSID, &clsid);
 ```
 
 
-```C
 
-```
 
 ### 3.  Finding the IID's
 Finding IID’s is not so different from finding CLSID’s, lucky us. However, sometimes the tricky part is to find the right interface. What we want to do is porting the following line to C.
@@ -61,18 +59,66 @@ As you can see, the `Document` and `ActiveView` are not present so we cannot acc
 The IID for the application interface is also shown on the previous picture, so let's copy it to our code.
 
 ```C
-IID ApplicationIfc;
-hr = IIDFromString(L"{A3AFB9CC-B653-4741-86AB-F0470EC1384C}", &ApplicationIfc);
+IID ApplicationIID;
+hr = IIDFromString(L"{A3AFB9CC-B653-4741-86AB-F0470EC1384C}", &ApplicationIID);
 ```
 
-### 3.  Create The Instance
+### 4.  Create The Instance
 Now that we have the CLSID and IID we need, we can create an instance of the MMC20.Application class using the following arguments:
 1.	The CLSID for the MMC20.Application
 2.	This is almost always NULL
 3.	The class context. OleView .NET shows the class context under the properties tab (picture below).
-4.	The IID of the interface we are interested in. If we have multiple interfaces that we want to interact with, we use **one** CoCreateInstance and multiple QueryInterface calls.
+4.	The IID of the interface we are interested in. If we have multiple interfaces that we want to interact with, we use **one** `CoCreateInstance` and multiple QueryInterface calls.
 5.	A pointer to a variable where we want our object to be stored. We can pass a variable of type IDispatch since the application interface inherits from IDispatch.
 
+![CLSCTX](https://github.com/Yaxser/CobaltStrike-BOF/blob/gh-pages/images/CLSCTX.png)
+
+```C
+IDispatch *ApplicationIfc
+hr = CoCreateInstance(&clsid, NULL, CLSCTX_LOCAL_SERVER, &ApplicationIID, (void**)&ApplicationIfc);
+```
+If this call succeeded, we will retrieve an MMC20.Application object that allows us to access the Application interface via `ApplicationIfc`.
+
+
+### 5. Getting the pointers to Document and View interfaces 
+The call to `CoCreateInstance` stored a pointer to the Application interface in the `ApplicationIfc` variable. Now, we will use this pointer to retrieve the `Document` property. The document property is actually an interface, but since it is not exposed to us, we cannot use the typical (`QueryInterface`) method to retrieve it. However, we can retrieve it using the method named `Document` from the application interface, which will store a pointer to the Document interface in the pointer we pass to it. The picture from the OleView (by Microsoft) shows the prototype for that function.
+
+![DocumentIfc](https://github.com/Yaxser/CobaltStrike-BOF/blob/gh-pages/images/Document.png)
+
+To invoke a specific method, we need to have its Dispatch ID (DISPID), which highlighted in pink on the picture. The DISPID is just a unqiue identifier for each method, and it can be hardcoded in our code. We can invoke a method from an interface using its invoke `method`. The invoke method is present on all interfaces that implement the IDispatch interface. The arguments are the following
+
+1.	Pointer to ‘this’, a pointer to the interface itself
+2.	The target method DISPID. We know from OleView that it is 4
+3.	This is reserved by Microsoft, always `IID_NULL`
+4.	Language preference, almost always `LOCALE_SYSTEM_DEFAULT`
+5.	The operation type, we want to get a property so it is `DISPATCH_PROPERTYGET`
+6.	In case you have parameters to pass to the function, we will go through that pain later, now we just pass NULL
+7.	In case the function you are invoking is returning anything. The VARIANT struct can accommodate many different types of values, including an interface. This will be populated with the Document interface in our case
+8.	If the function invoked threw an exception, you can see the exception details. However, for our purpose we can just pass NULL
+9.	In case of an error, we can also ignore it.
+
+If you are not sure what the lpVtbl is, please watch the video companion for this article :D
+
+```C
+DISPPARAMS dp = { NULL, NULL, 0, 0 }; 
+VARIANT* vDocIfc = (VARIANT*)malloc(sizeof(VARIANT));
+hr = ApplicationIfc->lpVtbl->Invoke(ApplicationIfc, (LONG)4, &IID_NULL, LOCALE_SYSTEM_DEFAULT, DISPATCH_PROPERTYGET, &dp, vDocIfc, NULL, 0);
+
+if(!SUCCEEDED(hr)){
+//error handling
+ApplicationIfc->lpVtbl->Release(ApplicationIfc->lpVtbl); //We must release whatever we acquire to keep the system clean
+}
+
+```
+
+The `VARIANT` type has two members. The first member is `vt`, which identifies the *v*ariant *t*ype, and the second member is the variant itself. So, in our case the first member (vt) will be `VT_DISPATCH`, and the second member will be `pdispVal` (pointer to IDispatch interface, in our case the Document interface). In other words, our document interface will be now located at `vDocIfc->pdispVal`.
+
+Now that we have obtained a pointer to the document interface, let’s obtain a pointer to the View interface. The call is identical to the previous one, we just change the variables. But… what if we did not want to hardcode the method dispatch ID? What if we knew that we wanted to call a function named ActiveView but did not want to open OleView to find its number? Easy. If we know the name of the method, we can use the function `GetIDsOfNames()` to retrieve its dispatch ID.
+
+
+```C
+
+```
 
 
 ---
