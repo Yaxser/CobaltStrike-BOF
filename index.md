@@ -29,7 +29,7 @@ HRESULT CLSIDFromProgID( L”MMC20.Application”, &clsid);
 ```
 Another way to find the CLSID is using OleView .NET from James Forshaw. It is an excellent tool to inspect COM objects. You can explore ProIDs and filter for MMC20 and copy the GUID. This tool has by no doubt much more to offer than just copying GUIDs.
 
-![Finding-CLSID](https://)
+![Finding-CLSID](https://github.com/Yaxser/CobaltStrike-BOF/blob/gh-pages/images/MMC20CLSID.png)
 
 
 
