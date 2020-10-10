@@ -1,6 +1,7 @@
 # Exploiting (D)COM in C; CobaltStrike BOF as PoC.
-As a junior Redteamer I wanted to learn more about (D)COM. Turned out that mostly (D)COM is abused using Powershell, C#, and C++. Now, it is possible to write a BOF using C++ but I thought it will be more interesting if I try C, and it worked! We will use MMC20.Application in the demo although the PoC uses ShellWindows. This is intentional because the concepts cannot be all explained in one PoC. If you go through this article, understanding the PoC should not be a difficult task.
-The COM Basics together with a demo is covered in a YouTube video (TBD). 
+As a junior Redteamer I wanted to learn more about (D)COM. Turned out that mostly (D)COM is abused using Powershell, C#, and C++. I learn better when I explain things to people, so I tried to do something new, and here I am trying to explain it to you xD. The example here is not the same as the beacon object file. This is because the WindowsShell exploitation path is longer and you will be very bored if I tried to explain using that example. However, if you understand what is happening here, making sense of the BOF PoC will not be that difficult. 
+
+FYI, CobaltStrike BOF support C++. So if you are planning to use COM objects with CobaltStrike, consider using C++ BOF instead of relying on C. Simply put, COM was not meant to be used by C, although it is possible.
 
 
 
