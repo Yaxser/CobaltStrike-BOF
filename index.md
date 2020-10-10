@@ -18,14 +18,14 @@ Let's break them down one at a time...
 ### 1.  Initialize COM
 This is pretty much standard. The function to use is `CoInitialize`, and NULL must be passed as an argument for it. You may also use `CoInitializeEx`, but `CoInitialize` will do.
 ```C
-HRESULT CoInitialize(NULL);
+HRESULT hr = CoInitialize(NULL);
 ```
 
 ### 2.  Find the CLSID for MMC20.Application class
 There are many ways to find the CLSID for a given class. The easiest way is to use Google. You can also find a CLSID programmatically using CLSIDFromProgID function.
 ```C
 CLSID clsid;
-HRESULT CLSIDFromProgID( L”MMC20.Application”, &clsid);
+hr =  CLSIDFromProgID( L"MMC20.Application", &clsid);
 ```
 Another way to find the CLSID is using OleView .NET from James Forshaw. It is an excellent tool to inspect COM objects. You can explore ProgIDs and filter for MMC20 and copy the GUID. This tool has by no doubt much more to offer than just copying GUIDs.
 
@@ -34,7 +34,7 @@ Another way to find the CLSID is using OleView .NET from James Forshaw. It is an
 Now, if you obtain the GUID as a string, you have to convert it to a CLSID using CLSIDFromString. Note the curly brackets, they are necessary.
 
 ```C
-wchar_t *MMC20_CLSID = L”{49B2791A-B1AE-4C90-9B8E-E860BA07F889}”
+wchar_t *MMC20_CLSID = L"{49B2791A-B1AE-4C90-9B8E-E860BA07F889}";
 CLSID clsid;
 hr = CLSIDFromString(MMC20_CLSID, &clsid);
 ```
@@ -74,7 +74,7 @@ Now that we have the CLSID and IID we need, we can create an instance of the MMC
 ![CLSCTX](https://raw.githubusercontent.com/Yaxser/CobaltStrike-BOF/gh-pages/images/CLSCTX.png)
 
 ```C
-IDispatch *ApplicationIfc
+IDispatch *ApplicationIfc;
 hr = CoCreateInstance(&clsid, NULL, CLSCTX_LOCAL_SERVER, &ApplicationIID, (void**)&ApplicationIfc);
 ```
 If this call succeeded, we will retrieve an MMC20.Application object that allows us to access the Application interface via `ApplicationIfc`.
@@ -107,7 +107,7 @@ hr = ApplicationIfc->lpVtbl->Invoke(ApplicationIfc, (LONG)4, &IID_NULL, LOCALE_S
 if(!SUCCEEDED(hr)){
 //error handling
 }
-ApplicationIfc->lpVtbl->Release(ApplicationIfc->lpVtbl); //We must release whatever we acquire to keep the system clean. If you will return during the error handling, don't forget to invoke release before you return!
+ApplicationIfc->lpVtbl->Release(ApplicationIfc); //We must release whatever we acquire to keep the system clean. If you will return during the error handling, don't forget to invoke release before you return!
 ```
 
 The `VARIANT` type has two members. The first member is `vt`, which identifies the *v*ariant *t*ype, and the second member is the variant itself. So, in our case the first member (vt) will be `VT_DISPATCH`, and the second member will be `pdispVal` (pointer to IDispatch interface, in our case the Document interface). In other words, our document interface will be now located at `vDocIfc->pdispVal`.
