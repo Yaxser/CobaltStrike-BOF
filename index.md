@@ -275,9 +275,9 @@ Big thanks to Raphael Mudge for his awesome tool and responsiveness to questions
 
 
 ## References
-This article helped a lot: https://www.codeproject.com/Articles/13601/COM-in-plain-C
-OleView .NET: https://github.com/tyranid/oleviewdotnet
-Haboob's paper: https://www.exploit-db.com/docs/48767
-CobaltStrike Beacon Object Files: https://www.cobaltstrike.com/help-beacon-object-files
-Christopher's work on beacon object files: https://www.trustedsec.com/blog/a-developers-introduction-to-beacon-object-files/
-Dominic's blog on DCOM: https://www.mdsec.co.uk/2020/09/i-like-to-move-it-windows-lateral-movement-part-2-dcom/ 
+1.  This article helped a lot: https://www.codeproject.com/Articles/13601/COM-in-plain-C
+2.  OleView .NET: https://github.com/tyranid/oleviewdotnet
+3.  Haboob's paper: https://www.exploit-db.com/docs/48767
+4.  CobaltStrike Beacon Object Files: https://www.cobaltstrike.com/help-beacon-object-files
+5.  Christopher's work on beacon object files: https://www.trustedsec.com/blog/a-developers-introduction-to-beacon-object-files/
+6.  Dominic's blog on DCOM: https://www.mdsec.co.uk/2020/09/i-like-to-move-it-windows-lateral-movement-part-2-dcom/ 
