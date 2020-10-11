@@ -8,4 +8,4 @@ A quick PoC that uses DCOM (ShellWindows) via beacon object files for lateral mo
       
  
 # 2 ) WMI Lateral Movement. 
-Similar concepts to the previous one, but an interesting learning experince. Code adopted from [CIA Vault8](https://wikileaks.org/ciav7p1/cms/page_11628905.html)
+Similar concepts to the previous one, but an interesting learning experince. Code adopted from [CIA Vault 8](https://wikileaks.org/ciav7p1/cms/page_11628905.html)
