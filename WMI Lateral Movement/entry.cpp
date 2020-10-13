@@ -1,7 +1,7 @@
 /*
  * WMI Lateral Movement Via Create Process
  * Adopted From: https://wikileaks.org/ciav7p1/cms/page_11628905.html
- * Big big huge thanks for Raffi for showing me how to create BOF with C++!
+ * Big big huge thanks for Raffi (rsmudge) for showing me how to create BOF with C++!
  */
 
 #include <windows.h>
