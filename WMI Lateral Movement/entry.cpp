@@ -1,8 +1,7 @@
 /*
- * Disable Windows Firewall.
- *
- * BOF adaptation of:
- * https://docs.microsoft.com/en-us/previous-versions/windows/desktop/ics/c-disabling-windows-firewall
+ * WMI Lateral Movement Via Create Process
+ * Adopted From: https://wikileaks.org/ciav7p1/cms/page_11628905.html
+ * Big big huge thanks for Raffi for showing me how to create BOF with C++!
  */
 
 #include <windows.h>
