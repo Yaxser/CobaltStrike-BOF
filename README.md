@@ -1,5 +1,5 @@
 # CobaltStrike-BOF
-Collection of beacon BOF written to learn windows and cobaltstrike
+Collection of beacon BOF written to learn windows and cobaltstrike. The DCOM lateral movement took sometime to figure out, and I did not find it done in other projects/repos. However, the WMI lateral movement (both Win32_Process.Create() and Event subscription are mainly done by others. What I did was minor modifications and porting it to BOF).
 
 
 # 1 ) DCOM Lateral Movement
