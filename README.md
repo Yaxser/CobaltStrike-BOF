@@ -15,16 +15,16 @@ This one uses WMI events for lateral movement. Most of the heavy lifting was don
 I ported these techniques to BOF in order to learn more about Windows, CobaltStrike, and lateral movement. I have a curiosity that copy/pasting powershell commands is killing.
 
 ## Did you write this from the ground up?
-The DCOM lateral movement took sometime to figure out, and I did not find it done in other projects/repos. However, the WMI lateral movement are mainly done by others. What I did was minor modifications and porting it to BOF.
+The DCOM lateral movement took sometime to figure out, and I did not find it done in other projects/repos. However, the WMI lateral movement parts are mainly done by others. What I did was minor modifications and porting it to BOF.
 
 ## Note on quality
-No. I am not a seasoned developer yet, so use with care. Before pushing these scripts to GIT, these scripts were tested on an Enterprise environment where network MDR is provided, and no alerts were trigged. However, it goes without saying that you should modify and test the scripts before you run them in your engagements. If you need assistant, please do not hesistate to contact me. Also, if you are interested in having aggressor scripts for these BOF, please lemme know!
+I am not a seasoned developer yet, so use with care. Before pushing these scripts to GIT, they were tested on an Enterprise environment where a network MDR service is provided, and no alerts were trigged. However, it goes without saying that you should modify and test the scripts before you run them in your engagements. If you need assistant, please do not hesistate to contact me. Also, if you are interested in having aggressor scripts for these BOF, please lemme know!
 
 ## Can I/We reach you?
 Yes, on[Twitter](https://twitter.com/Yas_o_h) or by [email](mailto:Y.Alhazmi@student.fontys.nl)
 
 ## Can I/We help you?
-Yes, with a star, a retweet, or by inviting me to your Red Team after I graduate from university.
+Yes, with a star, a retweet, or by inviting me to your Red Team after I graduate from uni.
 
 ## Acknowledgement
 Big thanks to [rsmudge](https://github.com/rsmudge) for his cintinous support and responsiveness to questions. The articles by [domchell](https://github.com/dmchell) served as a great introduction and helped in shaping my priorities.
