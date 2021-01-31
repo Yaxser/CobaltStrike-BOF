@@ -1,6 +1,6 @@
 
 ## On-demand Cobalt strike beacon
-This is an implementation of an on-demand C2 using dotnet BOF. The beacon will enter a sleep state until an email with a given word (in subject or body) is provided. This way your beacon will only call home ONLY when you want it to call home. When the beacon calls home, it will call home with whatever sleep time configured in the malleable profile. When you are done you can run the BOF again and the beacon will sleep until you send another email. As an extra, the email with the given word will be deleted before the user get notified about it.
+This is an implementation of an on-demand C2 using dotnet BOF. The beacon will enter a sleep state until an email with a given (sequence of) word(s) in the subject or body is provided. This way your beacon will ONLY call home when you want it to call home. When the beacon calls home, it will call home with whatever sleep time you configured in the malleable profile. When you are done you can run the BOF again and the beacon will sleep until you send another email. As an extra, the email with the given word will be deleted before the user get notified about it.
 
 ### Instructions
 1 ) Download the BOF .NET project (cheers to [CCob](https://twitter.com/_EthicalChaos_) for the brilliant work!) and follow CCob's guide [here](https://github.com/CCob/BOF.NET) to load the the dll into the beacon
