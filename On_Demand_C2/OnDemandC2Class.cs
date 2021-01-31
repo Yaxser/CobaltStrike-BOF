@@ -55,7 +55,6 @@ namespace On_Demand_C2_BOF
          void OnDemandC2(string type, string triggerWord)
         {
             OnDemandC2Trigger = triggerWord;
-
             try
             {
                 if (type == "subject")
