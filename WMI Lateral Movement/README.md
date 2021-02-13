@@ -2,9 +2,11 @@
 
 ## Compile Instructions 
 
+```
 git clone https://github.com/Yaxser/CobaltStrike-BOF.git
 cd CobaltStrike-BOF/WMI\ Lateral\ Movement/
-make 
+make
+```
 
 ## Cobalt Instructions
 
