@@ -21,4 +21,4 @@ This BOF cannot be used to add users to local groups. If you want a BOF that can
 This BOF tool has been successfully compiled on Mac OSX systems and used on Windows 8.1+ (x64) systems. Compiling the BOF code should also work on other systems (Linux, Windows) that have the Mingw-w64 compiler installed.
 
 ## Credits
-This very nice documentation structure is taken from [Outflank's C2 Tool Collection](https://github.com/outflanknl/C2-Tool-Collection) and I always use TrustedSec's [bofdefs.h](https://github.com/trustedsec/CS-Remote-OPs-BOF/blob/main/src/common/bofdefs.h) for the dynamic function resolution definitions.
+This very nice documentation and project structure is taken from [Outflank's C2 Tool Collection](https://github.com/outflanknl/C2-Tool-Collection) and I always use TrustedSec's [bofdefs.h](https://github.com/trustedsec/CS-Remote-OPs-BOF/blob/main/src/common/bofdefs.h) for the dynamic function resolution definitions.
