@@ -39,7 +39,7 @@ I ported these techniques to BOF in order to learn more about Windows, CobaltStr
 The DCOM lateral movement took sometime to figure out, and I did not find it done in other projects/repos. However, the WMI lateral movement parts are mainly done by others. What I did was minor modifications and porting it to BOF.
 
 ## Note on quality
-I am not a seasoned developer yet, so use with care. Before pushing these scripts to GIT, they were tested on an Enterprise environment where a network MDR service is provided, and no alerts were trigged. However, it goes without saying that you should modify and test the scripts before you run them in your engagements. If you need assistant, please do not hesistate to contact me. Also, if you are interested in having aggressor scripts for these BOF, please lemme know!
+I am not a seasoned developer yet, so use with care. Before pushing these scripts to GIT, they were tested on an Enterprise environment where a network MDR service is provided, and no alerts were trigged. However, it goes without saying that you should modify and test the scripts before you run them in your engagements. If you need assistant, please do not hesitate to contact me. Also, if you are interested in having aggressor scripts for these BOF, please lemme know!
 
 ## Can I/We reach you?
 Yes, on[Twitter](https://twitter.com/Yas_o_h) or by [email](mailto:Y.Alhazmi@student.fontys.nl)
